@@ -1,9 +1,6 @@
 package validator
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 func TestValidateDomainValidDomains(t *testing.T) {
 	domains := []string{"www.basicdomain.com", "basicdomain.com", "localhost"}
@@ -15,7 +12,6 @@ func TestValidateDomainValidDomains(t *testing.T) {
 }
 
 func TestValidateDomainInvalidDomains(t *testing.T) {
-	fmt.Println("Running invalid domains")
 	domains := []string{".basicdomain.com", "basicdomaincom.", "localhost-", "-localhost", "localhost-.com"}
 	for _, domain := range domains {
 		if ValidateDomain(domain) == true {

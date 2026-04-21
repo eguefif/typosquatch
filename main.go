@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"typosquatch/permutationengine"
 	"typosquatch/validator"
 )
 
@@ -16,5 +17,9 @@ func main() {
 		fmt.Println(args[1], "is a valid domain.")
 	} else {
 		fmt.Println(args[1], "is not valid.")
+	}
+	domain := os.Args[2]
+	for t := range permutationengine.PermutationsGenerator(domain) {
+		fmt.Println(t)
 	}
 }
