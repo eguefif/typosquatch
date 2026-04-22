@@ -1,7 +1,11 @@
 package checker
 
+// TODO:
+// - [ ] Check dns for results
+
 import (
 	"fmt"
+	"net"
 	"sync"
 )
 
@@ -91,7 +95,7 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 	for job := range jobsCh {
 		if job.state == StateWaiting {
 			job.state = StateProcessing
-			fmt.Println("Handling ", job.domain)
+			job.squatted = checkDns(job.domain)
 			job.state = StateFinished
 			resultsCh <- job
 		}
@@ -99,8 +103,16 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 	return
 }
 
+func checkDns(domain string) bool {
+	_, ok := net.LookupHost(domain)
+	if ok != nil {
+		return false
+	}
+	return true
+}
+
 func handleResults(domains []string, resultsCh <-chan CheckTask) []Result {
-	results := make([]Result, len(domains))
+	results := make([]Result, 0, len(domains))
 
 	for taskResult := range resultsCh {
 		switch taskResult.state {

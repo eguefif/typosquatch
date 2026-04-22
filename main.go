@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 	"typosquatch/checker"
 	"typosquatch/permutationengine"
 	"typosquatch/validator"
@@ -14,12 +15,20 @@ func main() {
 		return
 	}
 	args := os.Args[1:]
-	if len(args) == 2 && args[0] == "--domain" && validator.ValidateDomain(args[1]) {
-		fmt.Println(args[1], "is a valid domain.")
-	} else {
+	if !(len(args) == 2 && args[0] == "--domain" && validator.ValidateDomain(args[1])) {
 		fmt.Println(args[1], "is not valid.")
 	}
 	domain := os.Args[2]
+	domain = stripWWW(domain)
 	permutations := permutationengine.GetDomainPermutations(domain)
-	checker.CheckTypoSquatting(permutations)
+	results := checker.CheckTypoSquatting(permutations)
+	fmt.Println(results)
+}
+
+func stripWWW(domain string) string {
+	idx := strings.Index(domain, "www.")
+	if idx != 0 {
+		return domain
+	}
+	return domain[4:]
 }
