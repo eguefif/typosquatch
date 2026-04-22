@@ -13,6 +13,15 @@ func PermutationsGenerator(base_domain string) iter.Seq[string] {
 	}
 }
 
+func GetDomainPermutations(domain string) []string {
+	permutations := make([]string, 0, len(domain))
+
+	for i := range len(domain) {
+		permutations = append(permutations, charDeletion(domain, i))
+	}
+	return permutations
+}
+
 func charDeletion(domain string, n int) string {
 	return domain[:n] + domain[n+1:]
 }

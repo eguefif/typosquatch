@@ -19,7 +19,7 @@ A typosquatting domain detection tool with a CLI and REST API, built in Go.
 ### Phase 2 — Permutation engine
 **Go concepts:** slices, maps, `rune` vs `byte` (essential for homoglyphs), range loops, functions as values, package design
 
-- [ ] Character deletion (`exaple.com`)
+- [x] Character deletion (`exaple.com`)
 - [ ] Character transposition (`exmaple.com`)
 - [ ] Adjacent key substitution (QWERTY map)
 - [ ] Homoglyph substitution (`examp1e.com`)
