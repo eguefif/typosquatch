@@ -30,14 +30,16 @@ var stateName = map[TaskState]string{
 type CheckResult int
 
 type CheckTask struct {
-	domain   string
-	state    TaskState
-	squatted bool
+	domain    string
+	state     TaskState
+	record    []string
+	mxRecords []string
 }
 
 type Result struct {
-	domain   string
-	squatted bool
+	domain    string
+	record    []string
+	mxRecords []string
 }
 
 // Logic *****************************************
@@ -49,7 +51,7 @@ func CheckTypoSquatting(domains []string) []Result {
 	}
 	tasks := make([]CheckTask, 0, len(domains))
 	for _, domain := range domains {
-		tasks = append(tasks, CheckTask{domain, StateWaiting, false})
+		tasks = append(tasks, CheckTask{domain: domain, state: StateWaiting})
 	}
 
 	jobsCh := make(chan CheckTask, numWorkers*2)
@@ -95,7 +97,7 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 	for job := range jobsCh {
 		if job.state == StateWaiting {
 			job.state = StateProcessing
-			job.squatted = checkDns(job.domain)
+			job.record, job.mxRecords = checkDns(job.domain)
 			job.state = StateFinished
 			resultsCh <- job
 		}
@@ -103,12 +105,15 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 	return
 }
 
-func checkDns(domain string) bool {
-	_, ok := net.LookupHost(domain)
-	if ok != nil {
-		return false
+func checkDns(domain string) ([]string, []string) {
+	// TODO: Handle error
+	record, _ := net.LookupHost(domain)
+	resultMx, _ := net.LookupMX(domain)
+	mxRecords := []string{}
+	for _, mxRecord := range resultMx {
+		mxRecords = append(mxRecords, mxRecord.Host)
 	}
-	return true
+	return record, mxRecords
 }
 
 func handleResults(domains []string, resultsCh <-chan CheckTask) []Result {
@@ -117,7 +122,7 @@ func handleResults(domains []string, resultsCh <-chan CheckTask) []Result {
 	for taskResult := range resultsCh {
 		switch taskResult.state {
 		case StateFinished:
-			results = append(results, Result{taskResult.domain, taskResult.squatted})
+			results = append(results, Result{taskResult.domain, taskResult.record, taskResult.mxRecords})
 		case StateError:
 			fmt.Println("Error in task for domain: ", taskResult.domain)
 		}

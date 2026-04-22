@@ -48,8 +48,8 @@ We use buffered channels here two avoid iddle time from workers. We know how man
 ### Phase 3 — Concurrent DNS resolution
 **Go concepts:** goroutines, channels, `sync.WaitGroup`, worker pool pattern, `context` with timeout and cancellation, `net` package
 
-- [ ] Worker pool reading candidates from an input channel
-- [ ] A record DNS lookup per candidate
+- [x] Worker pool reading candidates from an input channel
+- [x] A record DNS lookup per candidate
 - [ ] Configurable concurrency (`--concurrency` flag)
 - [ ] Context-based timeout and cancellation
 - [ ] Benchmark at 50 / 100 / 200 workers
@@ -59,7 +59,7 @@ We use buffered channels here two avoid iddle time from workers. We know how man
 ### Phase 4 — Enrichment
 **Go concepts:** `net/http` client, struct design, JSON marshal/unmarshal, interfaces, error wrapping with `fmt.Errorf`
 
-- [ ] MX record lookup
+- [x] MX record lookup
 - [ ] HTTP/HTTPS probe (grab page title and `Server` header)
 - [ ] TLS certificate inspection (issuer, expiry, CN match)
 - [ ] WHOIS registration date via public API

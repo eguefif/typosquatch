@@ -20,7 +20,7 @@ func main() {
 	}
 	domain := os.Args[2]
 	domain = stripWWW(domain)
-	permutations := permutationengine.GetDomainPermutations(domain)
+	permutations := append(permutationengine.GetDomainPermutations(domain), []string{domain}...)
 	results := checker.CheckTypoSquatting(permutations)
 	fmt.Println(results)
 }
