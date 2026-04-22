@@ -4,6 +4,21 @@ A typosquatting domain detection tool with a CLI and REST API, built in Go.
 
 ---
 
+## Design
+
+The program first generates a list of domains to test.
+
+We use the workers pool pattern to check domains. Here is the architecture
+* One Goroutine handles the list of task to do. It uses a buffered channel. Len is numWorkers * 2
+* One Goroutine read a buffered channel for results. Size is numWorkers * 2
+* We schedules a numWorkers amount of Goroutine to check domains
+
+We use buffered channels here two avoid iddle time from workers. We know how many workers will process domains and we want to make sure they don't wait for jobs to do. This is why we use numWorkers * 2 in both case. With this design, idle time will only be spent in IO tasks.
+
+
+
+---
+
 ## Roadmap
 
 ### Phase 1 — Project setup and CLI basics
