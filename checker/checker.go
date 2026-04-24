@@ -4,6 +4,7 @@ package checker
 // - [ ] Check dns for results
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -34,12 +35,30 @@ type CheckTask struct {
 	state     TaskState
 	record    []string
 	mxRecords []string
+	err       error
 }
 
 type Result struct {
 	domain    string
 	record    []string
 	mxRecords []string
+}
+
+type ScanErrorStatus int
+
+const (
+	Timeout ScanErrorStatus = iota
+	NetworkUnreachable
+	NormalError
+)
+
+type ScanError struct {
+	status  ScanErrorStatus
+	message string
+}
+
+func (se ScanError) Error() string {
+	return se.message
 }
 
 // Logic *****************************************
@@ -97,7 +116,7 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 	for job := range jobsCh {
 		if job.state == StateWaiting {
 			job.state = StateProcessing
-			job.record, job.mxRecords = checkDns(job.domain)
+			job.record, job.mxRecords, job.err = checkDns(job.domain)
 			job.state = StateFinished
 			resultsCh <- job
 		}
@@ -105,15 +124,38 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 	return
 }
 
-func checkDns(domain string) ([]string, []string) {
-	// TODO: Handle error
-	record, _ := net.LookupHost(domain)
-	resultMx, _ := net.LookupMX(domain)
+func checkDns(domain string) ([]string, []string, error) {
+	record, errLookup := net.LookupHost(domain)
+	resultMx, errMx := net.LookupMX(domain)
+	if errLookup != nil {
+		return []string{}, []string{}, handleDnsError(domain, errLookup)
+	}
+	if errMx != nil {
+		return record, []string{}, handleDnsError(domain, errLookup)
+	}
+
 	mxRecords := []string{}
 	for _, mxRecord := range resultMx {
 		mxRecords = append(mxRecords, mxRecord.Host)
 	}
-	return record, mxRecords
+	return record, mxRecords, nil
+}
+
+func handleDnsError(domain string, err error) ScanError {
+	var dnsError *net.DNSError
+	var errorStatus ScanErrorStatus
+	if errors.As(err, &dnsError) {
+		switch {
+		case dnsError.IsTimeout:
+			errorStatus = Timeout
+		case dnsError.IsTemporary:
+			errorStatus = NetworkUnreachable
+		default:
+			errorStatus = NormalError
+		}
+	}
+
+	return ScanError{status: errorStatus, message: fmt.Errorf("error lookup %s: %w", domain, err).Error()}
 }
 
 func handleResults(domains []string, resultsCh <-chan CheckTask) []Result {
