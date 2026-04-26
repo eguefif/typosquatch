@@ -33,15 +33,15 @@ type CheckResult int
 type CheckTask struct {
 	domain    string
 	state     TaskState
-	record    []string
+	records   []string
 	mxRecords []string
 	err       error
 }
 
 type Result struct {
-	domain    string
-	record    []string
-	mxRecords []string
+	Domain    string
+	Records   []string
+	MxRecords []string
 }
 
 type ScanErrorStatus int
@@ -116,7 +116,7 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 	for job := range jobsCh {
 		if job.state == StateWaiting {
 			job.state = StateProcessing
-			job.record, job.mxRecords, job.err = checkDns(job.domain)
+			job.records, job.mxRecords, job.err = checkDns(job.domain)
 			job.state = StateFinished
 			resultsCh <- job
 		}
@@ -125,20 +125,20 @@ func tasksWorker(jobsCh <-chan CheckTask, resultsCh chan<- CheckTask) {
 }
 
 func checkDns(domain string) ([]string, []string, error) {
-	record, errLookup := net.LookupHost(domain)
+	records, errLookup := net.LookupHost(domain)
 	resultMx, errMx := net.LookupMX(domain)
 	if errLookup != nil {
 		return []string{}, []string{}, handleDnsError(domain, errLookup)
 	}
 	if errMx != nil {
-		return record, []string{}, handleDnsError(domain, errLookup)
+		return records, []string{}, handleDnsError(domain, errLookup)
 	}
 
 	mxRecords := []string{}
 	for _, mxRecord := range resultMx {
 		mxRecords = append(mxRecords, mxRecord.Host)
 	}
-	return record, mxRecords, nil
+	return records, mxRecords, nil
 }
 
 func handleDnsError(domain string, err error) ScanError {
@@ -164,7 +164,7 @@ func handleResults(domains []string, resultsCh <-chan CheckTask) []Result {
 	for taskResult := range resultsCh {
 		switch taskResult.state {
 		case StateFinished:
-			results = append(results, Result{taskResult.domain, taskResult.record, taskResult.mxRecords})
+			results = append(results, Result{taskResult.domain, taskResult.records, taskResult.mxRecords})
 		case StateError:
 			fmt.Println("Error in task for domain: ", taskResult.domain)
 		}

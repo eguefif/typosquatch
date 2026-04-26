@@ -12,7 +12,7 @@ import (
 // TODO: Create a context for the APP
 // Get the next job id and returns it
 
-func Scan(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Scan(w http.ResponseWriter, r *http.Request) {
 	splits := strings.Split(r.URL.Path[1:], "/")
 	if len(splits) != 2 {
 		http.NotFound(w, r)
@@ -28,18 +28,20 @@ func Scan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scanningJob := launchScan(domain)
-	fmt.Fprintf(w, "scanning job: %d", scanningJob)
+	scanningJobId := h.launchScan(domain)
+	fmt.Fprintf(w, "scanning job: %d", scanningJobId)
 }
 
-func launchScan(domain string) int {
+func (h *Handler) launchScan(domain string) int64 {
 	permutations := append(permutationengine.GetDomainPermutations(domain), []string{domain}...)
+	jobId := h.AddJob()
 	go func() {
 		results := checker.CheckTypoSquatting(permutations)
-		fmt.Println("Result for job %d", 1)
+		h.AddResult(jobId, results)
+		fmt.Println("Result for job %d", jobId)
 		fmt.Println(results)
 	}()
-	return 1
+	return jobId
 }
 
 func stripWWW(domain string) string {

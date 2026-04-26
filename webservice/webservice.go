@@ -6,7 +6,8 @@ import (
 )
 
 func Run(port string) {
-	http.HandleFunc("/scan/", handlers.Scan)
-	http.HandleFunc("/result/", handlers.Result)
+	handler := handlers.NewHandler()
+	http.HandleFunc("/scan/", handler.Scan)
+	http.HandleFunc("/result/", handler.Result)
 	http.ListenAndServe(":"+port, nil)
 }
