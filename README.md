@@ -59,10 +59,9 @@ The API layer submits scan jobs in the background and exposes endpoints to poll 
 ### Phase 5 — Error handling
 **Go concepts:** custom error types, `fmt.Errorf` + `%w`, `errors.Is` / `errors.As`, sentinel errors
 
-- [ ] Define a `ScanError` type with a `Code` field (e.g. `ErrNotFound`, `ErrInvalidDomain`)
-- [ ] Wrap DNS errors with context (`fmt.Errorf("lookup %s: %w", domain, err)`)
-- [ ] Use `errors.Is` / `errors.As` in handlers to map errors to HTTP status codes
-- [ ] Return structured JSON error responses: `{"error": "domain not found"}`
+- [x] Define a `ScanError` type with a `Code` field (e.g. `ErrNotFound`, `ErrInvalidDomain`)
+- [x] Wrap DNS errors with context (`fmt.Errorf("lookup %s: %w", domain, err)`)
+- [x] Use `errors.Is` / `errors.As` in handlers to map errors to HTTP status codes
 
 ---
 
